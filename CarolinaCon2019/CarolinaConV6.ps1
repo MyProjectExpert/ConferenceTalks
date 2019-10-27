@@ -15,8 +15,8 @@
 #>
 CD \
 # setup variables
-$computers = "WCC2MSI2", "WCC001VS" , "BigRed"
-$computers = "WCC2MSI2"
+$computers = "computer1", "computer2" , "computer3"
+$computers = "computer1"
 # find all command that have a parameter "ComputerName"
 Get-Command -CommandType Cmdlet -ParameterName ComputerName
 #
@@ -25,17 +25,17 @@ Get-Command -CommandType Cmdlet -ParameterName ComputerName
 #######################################################################
 #
 PING 192.168.0.62 -n 2
-PING WCC2MSI2 -n 2 -a
+PING computerName -n 2 -a
 #
 help Test-Connection
-Test-Connection -ComputerName WCC2MSI2
-Test-Connection WCC2MSI2
+Test-Connection -ComputerName computerName
+Test-Connection computerName
 #
 # Test-Connection WCC2MSI2, WCC001VS -Count 2 -Protocol DCOM
 Test-Connection $computers -Count 2
 #
 #  Quiet is a true or false
-"WCC2MSI2", "WCC001VS", "192.168.0.62", "WCC002VS", "BigRed" | 
+"computer1", "computer2", "192.168.0.62", "computer3", "computer4" | 
    where { Test-Connection -Quiet -ComputerName $_ -Count 1 }
 #
 Test-NetConnection -ComputerName $computers | Select *
@@ -45,7 +45,7 @@ $MyResults
 $myResults.IsAdmin
 $MyResults.SourceAddress
 #
-"WCC2MSI2", "WCC001VS" | 
+"computer1", "computer2" | 
    foreach {Test-NetConnection -ComputerName $_ -CommonTCPPort SMB }
 #
 #  handy for testing ports
@@ -72,7 +72,7 @@ Get-Process
 #
 get-process -computerName $computers
 #
-get-process lsass -ComputerName WCC2MSI2 
+get-process lsass -ComputerName computer1 
 #
 get-process lsass -ComputerName $computers |
 select MachineName, ID, Name, handles, VM, WS |
@@ -146,9 +146,9 @@ $ScrapPage.content
 #######################################################################
 Get-help Resolve-DnsName 
 #
-Resolve-DnsName www.wcc2demo.com
+Resolve-DnsName www.computerName.com
 #
-Resolve-DnsName www.wcc2demo.com | Select * 
+Resolve-DnsName www.computerName.com | Select * 
 #
 #######################################################################
 #   Firewall commands
@@ -239,8 +239,8 @@ Enter-PSSession -ComputerName Wcc001vs -Credential company\admin
 # Invoke-Commmand
 #   Create a tempory PSSession
 #   Run a script block
-Invoke-Command -ScriptBlock {Get-Process -IncludeUserName} -ComputerName Wcc001VS -Credential wcc2prod\mwharton
-Invoke-Command -ScriptBlock {Get-Process -IncludeUserName} -ComputerName Wcc001VS
+Invoke-Command -ScriptBlock {Get-Process -IncludeUserName} -ComputerName computer1 -Credential domainName\userName
+Invoke-Command -ScriptBlock {Get-Process -IncludeUserName} -ComputerName computer1
 #
 # Demo
 # START https://www.microsoft.com/en-us/download/details.aspx?id=45520
@@ -263,17 +263,17 @@ Enable-PSRemoting
 Get-Service winrm
 Test-WSMan
 #
-Test-WSMan -ComputerName BigRed
-Test-WSMan -ComputerName WCC001VS
-Test-WSMan -ComputerName WCC001VS -Credential wcc2prod\mawharton  # fails 
-Test-WSMan -ComputerName WCC001VS -Credential wcc2prod\mawharton -Authentication Default
+Test-WSMan -ComputerName computer1
+Test-WSMan -ComputerName computer2
+Test-WSMan -ComputerName computer2 -Credential wcc2prod\mawharton  # fails 
+Test-WSMan -ComputerName computer2 -Credential wcc2prod\mawharton -Authentication Default
 #
-Get-service winrm -ComputerName WCC001VS, WCC2MSI2, BigRed | 
+Get-service winrm -ComputerName computer1, computer1, computer3 | 
   Select MachineName, name, status, starttype
 #
 # Demo 1 to 1
 #
-Enter-PSSession -ComputerName wcc00vs
+Enter-PSSession -ComputerName computer1
 hostname
 get-process -IncludeUserName
 dir c:\
@@ -384,11 +384,11 @@ Get-wmiObject -classname win32_operatingsystem -ComputerName $computers |
   @{Name="Installed";Expression={$_.ConvertToDateTime($_.INstallDate)}}
 
 # filtering results
-get-wmiobject win32_process -ComputerName BigRed  | 
+get-wmiobject win32_process -ComputerName computer1  | 
     Select Name, ProcessID, WorkingSetSize
 
 # works but not effective
-get-wmiobject win32_process -ComputerName BigRed  | 
+get-wmiobject win32_process -ComputerName computer1  | 
    Where { $_.name -eq 'lsass.exe'}
 
 # preferred
@@ -396,20 +396,20 @@ get-wmiobject -Query "Select * from win32_process where name = 'lsass.exe'"-Comp
     Select PSComputerName, Name, ProcessID, WorkingSetSize
 
 # using query
-get-wmiobject win32_process -filter "name = 'lsass.exe'"-ComputerName BigRed  | 
+get-wmiobject win32_process -filter "name = 'lsass.exe'"-ComputerName computer1  | 
     Select PSComputerName, Name, ProcessID, WorkingSetSize
 
 # using filter
-get-wmiobject win32_process -filter "name = 'lsass.exe'"-ComputerName BigRed  | 
+get-wmiobject win32_process -filter "name = 'lsass.exe'"-ComputerName computer1  | 
     Select PSComputerName, Name, ProcessID, WorkingSetSize
 
 # cannot be used for local 
 $cred = get-credential wcc2prod\mawharton
-get-wmiobject win32_process -filter "name = 'lsass.exe'"-ComputerName WCC001VS -Credential $cred | 
+get-wmiobject win32_process -filter "name = 'lsass.exe'"-ComputerName computer1 -Credential $cred | 
     Select PSComputerName, Name, ProcessID, WorkingSetSize
 
 # disk drive info
-get-wmiobject win32_logicaldisk -filter "deviceid='C:'"-ComputerName WCC2MSI2 -Credential $cred | 
+get-wmiobject win32_logicaldisk -filter "deviceid='C:'"-ComputerName computer1 -Credential $cred | 
     Select PSComputerName, Caption, `
     @{Name="SizeGB"; Expression={($_.Size/1gb) -as [INT]}}, `
     @{Name="FreeGB"; Expression={($_.Freespace/1GB)}}, `
