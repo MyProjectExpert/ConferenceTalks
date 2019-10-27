@@ -546,7 +546,7 @@ psedit swn*
 ####################################################################
 #  Fill browser fields and login
 #  F12 to find fields
-$url = "http://mail.whartoncomputer.com/IClient/Login.aspx"
+$url = "http://mail.computerName.com/IClient/Login.aspx"
 $ie = New-Object -ComObject internetexplorer.application
 $ie.Visible = $true
 $ie.Navigate($url)
